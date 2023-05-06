@@ -8,8 +8,10 @@
 import json
 import os
 import requests
+import itchat
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
+from config import conf
 import plugins
 from plugins import *
 from common.log import logger
@@ -23,6 +25,7 @@ class BotCharge(Plugin):
         curdir = os.path.dirname(__file__)
         config_path = os.path.join(curdir, "config.json")
         self.params_cache = ExpiredDict(60 * 60)
+        self.agent_id = conf().get("wechatcomapp_agent_id")
         if not os.path.exists(config_path):
             logger.info('[RP] 配置文件不存在，将使用config.json.template模板')
             config_path = os.path.join(curdir, "config.json.template")
@@ -31,9 +34,11 @@ class BotCharge(Plugin):
                 config = json.load(f)
                 self.check_url = config["check_url"]
                 self.pay_url = config["pay_url"]
+                self.check_count = config["check_count"]
                 if not self.check_url:
                     raise Exception("please set your check_url in config or environment variable.")
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
+            self.handlers[Event.ON_DECORATE_REPLY] = self.on_decorate_reply
             logger.info("[RP] inited")
         except Exception as e:
             if isinstance(e, FileNotFoundError):
@@ -49,18 +54,29 @@ class BotCharge(Plugin):
                                              ContextType.TEXT]:
             return
         logger.debug("[RP] on_handle_context. content: %s" % e_context['context'].content)
-        logger.info("[RP] image_query={}".format(e_context['context'].content))
         reply = Reply()
         try:
-            msg = e_context['context']["msg"]
+            user_id = e_context['context']["msg"]["from_user_id"]
             # 校验用户权限
-            check_perm = requests.get(self.check_url, params={"user_id": msg.from_user_id, "bot_id": msg.to_user_id}, timeout=30.05)
-            if not check_perm.json().get("result"):
-                # 返回余额不足或没有权限
-                reply.type = ReplyType.TEXT
-                reply.content = self.pay_url.format(msg.to_user_id)
+            check_perm = requests.get(self.check_url, params={"user_id": user_id,
+                                                              "agent_id": self.agent_id}, timeout=3.05)
+            itchat.send("测试主动发消息成功", toUserName=e_context['context']["msg"]["from_user_id"])
+            # if not check_perm.json().get("result"):
+            if check_perm.json().get("result") != "1":
+                # 返回付款连接
+                reply.type = ReplyType.INFO
+                reply.content = self.check_count + "\n" + self.pay_url.format(self.agent_id)
                 e_context.action = EventAction.BREAK_PASS  # 事件结束后，跳过处理context的默认逻辑
                 e_context['reply'] = reply
+                logger.info("[RP] check User Permissions fail! user_id={}, agent_id={}".format(user_id, self.agent_id))
+            # elif check_perm.json().get("result") == "0":
+            #     # 返回当天次数用完
+            #     reply.type = ReplyType.INFO
+            #     reply.content = self.check_count + "\n" + self.pay_url.format(self.agent_id)
+            #     e_context.action = EventAction.BREAK_PASS  # 事件结束后，跳过处理context的默认逻辑
+            #     e_context['reply'] = reply
+            else:
+                logger.info("[RP] check success! user_id={}, agent_id={}".format(user_id, self.agent_id))
         except Exception as e:
             reply.type = ReplyType.ERROR
             reply.content = "[RP] " + str(e)
@@ -68,4 +84,15 @@ class BotCharge(Plugin):
             logger.exception("[RP] exception: %s" % e)
             e_context.action = EventAction.CONTINUE
 
-
+    def on_decorate_reply(self, e_context: EventContext):
+        if e_context["reply"].type in [ReplyType.TEXT, ReplyType.VOICE]:
+            if e_context["reply"]["content"]:
+                try:
+                    user_id = e_context['context']["msg"]["from_user_id"]
+                    requests.get(self.charge_url, params={
+                        "user_id": user_id,
+                        "agent_id": self.agent_id}, timeout=3.05)
+                    logger.info("[RP] user charge success! user_id={}, agent_id={}".format(user_id, self.agent_id))
+                except Exception as e:
+                    logger.exception("[RP] exception: %s" % e)
+            return
