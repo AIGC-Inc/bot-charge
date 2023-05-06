@@ -82,7 +82,7 @@ def check_User_Permissions():
         try:
             user1 = BuyUserPermission(user_id=info_dict.get("user_id"),
                                       agent_id=info_dict.get("agent_id"),
-                                      margin=2,
+                                      margin=3,
                                       status=1,
                                       use_count=0,
                                       expire_time=datetime.now(),
