@@ -60,7 +60,8 @@ class BotCharge(Plugin):
             # 校验用户权限
             check_perm = requests.get(self.check_url, params={"user_id": user_id,
                                                               "agent_id": self.agent_id}, timeout=3.05)
-            itchat.send("测试主动发消息成功", toUserName=e_context['context']["msg"].from_user_id)
+            itchat.send("@msg@ 测试主动发消息成功", toUserName=user_id)
+            logger.info("[RP] check User result, result={}".format(check_perm.text))
             # if not check_perm.json().get("result"):
             if check_perm.json().get("result") != "1":
                 # 返回付款连接
@@ -82,7 +83,7 @@ class BotCharge(Plugin):
             reply.content = "[RP] " + str(e)
             e_context['reply'] = reply
             logger.exception("[RP] exception: %s" % e)
-            e_context.action = EventAction.CONTINUE
+            e_context.action = EventAction.BREAK_PASS
 
     def on_decorate_reply(self, e_context: EventContext):
         if e_context["reply"].type in [ReplyType.TEXT, ReplyType.VOICE]:
