@@ -82,14 +82,14 @@ def check_User_Permissions():
         try:
             user1 = BuyUserPermission(user_id=info_dict.get("user_id"),
                                       agent_id=info_dict.get("agent_id"),
-                                      margin=3,
+                                      margin=2,
                                       status=1,
                                       use_count=0,
                                       expire_time=datetime.now(),
                                       create_time=datetime.now())
             db.session.add(user1)
             db.session.commit()
-            return jsonify(result="2")
+            return jsonify(result="1")
         except Exception as e:
             print("222222", e)
             db.session.rollback()
