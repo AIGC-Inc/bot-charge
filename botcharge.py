@@ -35,6 +35,7 @@ class BotCharge(Plugin):
                 self.check_url = config["check_url"]
                 self.pay_url = config["pay_url"]
                 self.charge_url = config["charge_url"]
+                self.check_count = config["check_count"]
                 if not self.check_url:
                     raise Exception("please set your check_url in config or environment variable.")
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
@@ -60,7 +61,7 @@ class BotCharge(Plugin):
             # 校验用户权限
             check_perm = requests.get(self.check_url, params={"user_id": user_id,
                                                               "agent_id": self.agent_id}, timeout=3.05)
-            itchat.send("@msg@ 测试主动发消息成功", toUserName=user_id)
+            # itchat.send("@msg@ 测试主动发消息成功", toUserName=user_id)
             logger.info("[RP] check User result, result={}".format(check_perm.text))
             # if not check_perm.json().get("result"):
             if check_perm.json().get("result") != "1":
