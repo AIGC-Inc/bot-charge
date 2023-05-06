@@ -18,7 +18,8 @@ from common.log import logger
 from common.expired_dict import ExpiredDict
 
 
-@plugins.register(name="BotCharge", desc="调用API接口判断用户权限", desire_priority=100, version="0.1", author="ffwen123")
+@plugins.register(name="BotCharge", desc="调用API接口判断用户权限", desire_priority=100, version="0.1",
+                  author="ffwen123")
 class BotCharge(Plugin):
     def __init__(self):
         super().__init__()

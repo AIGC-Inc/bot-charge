@@ -33,7 +33,7 @@ def api_try(fn):
     return f
 
 
-@scheduler.task('cron', id='my_daily_task', hour=23, minute=2)
+@scheduler.task('cron', id='my_daily_task', hour=0, minute=0)
 def check_task():
     with app.app_context():
         try:
