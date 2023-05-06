@@ -3,3 +3,4 @@ flask-sqlalchemy>=3.0.3
 Flask-APScheduler==1.12.4
 sqlalchemy==1.4.27
 pymysql>=1.0.3
+mysqlclient==2.1.1

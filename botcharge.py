@@ -34,7 +34,7 @@ class BotCharge(Plugin):
                 config = json.load(f)
                 self.check_url = config["check_url"]
                 self.pay_url = config["pay_url"]
-                self.check_count = config["check_count"]
+                self.charge_url = config["charge_url"]
                 if not self.check_url:
                     raise Exception("please set your check_url in config or environment variable.")
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
