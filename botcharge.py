@@ -18,7 +18,7 @@ from common.log import logger
 from common.expired_dict import ExpiredDict
 
 
-@plugins.register(name="BotCharge", desc="调用API接口判断用户权限", desire_priority=990, version="0.1", author="ffwen123")
+@plugins.register(name="BotCharge", desc="调用API接口判断用户权限", desire_priority=100, version="0.1", author="ffwen123")
 class BotCharge(Plugin):
     def __init__(self):
         super().__init__()
@@ -56,11 +56,11 @@ class BotCharge(Plugin):
         logger.debug("[RP] on_handle_context. content: %s" % e_context['context'].content)
         reply = Reply()
         try:
-            user_id = e_context['context']["msg"]["from_user_id"]
+            user_id = e_context['context']["msg"].from_user_id
             # 校验用户权限
             check_perm = requests.get(self.check_url, params={"user_id": user_id,
                                                               "agent_id": self.agent_id}, timeout=3.05)
-            itchat.send("测试主动发消息成功", toUserName=e_context['context']["msg"]["from_user_id"])
+            itchat.send("测试主动发消息成功", toUserName=e_context['context']["msg"].from_user_id)
             # if not check_perm.json().get("result"):
             if check_perm.json().get("result") != "1":
                 # 返回付款连接
@@ -86,9 +86,9 @@ class BotCharge(Plugin):
 
     def on_decorate_reply(self, e_context: EventContext):
         if e_context["reply"].type in [ReplyType.TEXT, ReplyType.VOICE]:
-            if e_context["reply"]["content"]:
+            if e_context["reply"].content:
                 try:
-                    user_id = e_context['context']["msg"]["from_user_id"]
+                    user_id = e_context['context']["msg"].from_user_id
                     requests.get(self.charge_url, params={
                         "user_id": user_id,
                         "agent_id": self.agent_id}, timeout=3.05)
