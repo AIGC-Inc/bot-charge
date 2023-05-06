@@ -64,19 +64,19 @@ class BotCharge(Plugin):
             # itchat.send("@msg@ 测试主动发消息成功", toUserName=user_id)
             logger.info("[RP] check User result, result={}".format(check_perm.text))
             # if not check_perm.json().get("result"):
-            if check_perm.json().get("result") != "1":
+            if check_perm.json().get("result") in ["0", "-1"]:
                 # 返回付款连接
                 reply.type = ReplyType.INFO
                 reply.content = self.check_count + "\n" + self.pay_url.format(self.agent_id)
                 e_context.action = EventAction.BREAK_PASS  # 事件结束后，跳过处理context的默认逻辑
                 e_context['reply'] = reply
                 logger.info("[RP] check User Permissions fail! user_id={}, agent_id={}".format(user_id, self.agent_id))
-            # elif check_perm.json().get("result") == "0":
-            #     # 返回当天次数用完
-            #     reply.type = ReplyType.INFO
-            #     reply.content = self.check_count + "\n" + self.pay_url.format(self.agent_id)
-            #     e_context.action = EventAction.BREAK_PASS  # 事件结束后，跳过处理context的默认逻辑
-            #     e_context['reply'] = reply
+            elif check_perm.json().get("result") == "2":
+                # 返回当天次数用完
+                reply.type = ReplyType.INFO
+                reply.content = "您有免费额度3次，或者" + "\n" + self.pay_url.format(self.agent_id)
+                e_context.action = EventAction.BREAK_PASS  # 事件结束后，跳过处理context的默认逻辑
+                e_context['reply'] = reply
             else:
                 logger.info("[RP] check success! user_id={}, agent_id={}".format(user_id, self.agent_id))
         except Exception as e:
