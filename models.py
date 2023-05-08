@@ -2,7 +2,6 @@
 # -*- coding=utf-8 -*-
 """
 @time: 2023/5/4 11:45
-@Project ：chatgpt-on-wechat
 @file: models.py
 """
 from flask_sqlalchemy import SQLAlchemy

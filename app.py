@@ -2,7 +2,6 @@
 # -*- coding=utf-8 -*-
 """
 @time: 2023/5/4 11:28
-@Project ：chatgpt-on-wechat
 @file: app.py
 """
 import sys
@@ -14,7 +13,7 @@ from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, request
 # from flask_apscheduler import APScheduler
 from gevent import pywsgi
-import api_config
+import config
 from models import *
 
 
@@ -55,7 +54,7 @@ def api_try(fn):
 def creat_app():
     app1 = Flask(__name__)
     # 加载配置文件
-    app1.config.from_object(api_config)
+    app1.config.from_object(config)
     app1.config['SCHEDULER_TIMEZONE'] = ZoneInfo('Asia/Shanghai')
     # db绑定app
     db.init_app(app1)
@@ -133,6 +132,6 @@ def user_Charge():
 
 
 # python app.py >charge.log 2>&1 &
-server = pywsgi.WSGIServer(('0.0.0.0', api_config.api_port), app)
+server = pywsgi.WSGIServer(('0.0.0.0', config.api_port), app)
 # app.run(port=api_config.api_port, host='0.0.0.0', debug=True)
 server.serve_forever()
