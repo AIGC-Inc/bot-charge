@@ -13,8 +13,10 @@ from functools import wraps
 from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, request
 # from flask_apscheduler import APScheduler
+from gevent import pywsgi
 import api_config
 from models import *
+
 
 # scheduler = APScheduler()
 
@@ -61,6 +63,8 @@ def creat_app():
 
 
 app = creat_app()
+
+
 # scheduler.init_app(app)
 # scheduler.start()
 # logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
@@ -102,7 +106,7 @@ def check_User_Permissions():
             db.session.commit()
             return jsonify(result="1")
         except Exception as e:
-            print("222222", e)
+            print("check-user", e)
             db.session.rollback()
             return jsonify(result="-1")
 
@@ -123,9 +127,12 @@ def user_Charge():
         else:
             return jsonify(result="0")
     except Exception as e:
-        print(e)
+        print("user-charge", e)
         db.session.rollback()
         return jsonify(result=False)
 
 
-app.run(port=api_config.api_port, host='0.0.0.0', debug=True)
+# python app.py >charge.log 2>&1 &
+server = pywsgi.WSGIServer(('0.0.0.0', api_config.api_port), app)
+# app.run(port=api_config.api_port, host='0.0.0.0', debug=True)
+server.serve_forever()
