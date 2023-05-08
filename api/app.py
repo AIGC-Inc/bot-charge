@@ -8,15 +8,15 @@
 import sys
 from datetime import datetime
 import traceback
-import logging
+# import logging
 from functools import wraps
 from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, request
-from flask_apscheduler import APScheduler
+# from flask_apscheduler import APScheduler
 import api_config
 from models import *
 
-scheduler = APScheduler()
+# scheduler = APScheduler()
 
 
 def api_try(fn):
@@ -33,21 +33,21 @@ def api_try(fn):
     return f
 
 
-@scheduler.task('cron', id='my_daily_task', hour=0, minute=0)
-def check_task():
-    with app.app_context():
-        try:
-            user_down = BuyUserPermission.query.filter(BuyUserPermission.expire_time < datetime.now()).update(
-                {"margin": 3, "update_time": datetime.now()})
-            user_up = BuyUserPermission.query.filter(BuyUserPermission.expire_time > datetime.now()).update(
-                {"margin": 50, "update_time": datetime.now()})
-
-            db.session.commit()
-            print("user_up", type(user_up), user_up)
-            print("user_down", type(user_down), user_down)
-        except Exception as e:
-            print("111111111111", e)
-            db.session.rollback()
+# @scheduler.task('cron', id='my_daily_task', hour=0, minute=0)
+# def check_task():
+#     with app.app_context():
+#         try:
+#             user_down = BuyUserPermission.query.filter(BuyUserPermission.expire_time < datetime.now()).update(
+#                 {"margin": 3, "update_time": datetime.now()})
+#             user_up = BuyUserPermission.query.filter(BuyUserPermission.expire_time > datetime.now()).update(
+#                 {"margin": 50, "update_time": datetime.now()})
+#
+#             db.session.commit()
+#             print("user_up", type(user_up), user_up)
+#             print("user_down", type(user_down), user_down)
+#         except Exception as e:
+#             print("111111111111", e)
+#             db.session.rollback()
 
 
 def creat_app():
@@ -61,9 +61,9 @@ def creat_app():
 
 
 app = creat_app()
-scheduler.init_app(app)
-scheduler.start()
-logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
+# scheduler.init_app(app)
+# scheduler.start()
+# logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
 
 
 @app.route('/check-user', methods=["GET"])
@@ -71,22 +71,33 @@ logging.getLogger('apscheduler.executors.default').setLevel(logging.INFO)
 def check_User_Permissions():
     info_dict = request.values.to_dict()
     print(info_dict)
-    user_perms = BuyUserPermission.query.filter_by(user_id=info_dict.get("user_id"), agent_id=info_dict.get("agent_id")
-                                                   ).first()
+    user_id = info_dict.get("user_id")
+    agent_id = info_dict.get("agent_id")
+    user_perms = BuyUserPermission.query.filter_by(user_id=user_id, agent_id=agent_id).first()
     print(type(user_perms), user_perms)
-    if user_perms and user_perms.margin > 0:
-        return jsonify(result="1")
-    elif user_perms and user_perms.margin == 0:
-        return jsonify(result="0")
+    if user_perms:
+        update_time = user_perms.update_time
+        print(update_time, type(update_time))
+        # 判断是否失效
+        if update_time.date() < datetime.now().date():
+            if user_perms.expire_time > datetime.now():
+                combo = BuyCombo.query.filter_by(agent_id=agent_id).first()
+                user_perms.margin = combo.upper_limit
+            else:
+                user_perms.margin = 3
+            user_perms.update_time = datetime.now()
+            db.session.commit()
+            return jsonify(result="1")
+        else:
+            if user_perms.margin > 0:
+                return jsonify(result="1")
+            else:
+                return jsonify(result="0")
     else:
         try:
-            user1 = BuyUserPermission(user_id=info_dict.get("user_id"),
-                                      agent_id=info_dict.get("agent_id"),
-                                      margin=3,
-                                      status=1,
-                                      use_count=0,
-                                      expire_time=datetime.now(),
-                                      create_time=datetime.now())
+            user1 = BuyUserPermission(user_id=user_id, agent_id=agent_id, margin=3, status=1, use_count=0,
+                                      expire_time=datetime.now(), create_time=datetime.now(),
+                                      update_time=datetime.now())
             db.session.add(user1)
             db.session.commit()
             return jsonify(result="1")

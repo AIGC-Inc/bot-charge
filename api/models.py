@@ -28,9 +28,9 @@ class BuyUserOrder(db.Model):
     __tablename__ = 'buy_user_order'
 
     order_id = db.Column(db.BigInteger, primary_key=True)
-    user_id = db.Column(db.String(255), nullable=False, info='企业微信用户的user_id')
+    user_id = db.Column(db.String(255), info='企业微信用户的user_id')
     out_trade_no = db.Column(db.String(255), index=True, info='订单编号')
-    prepay_id = db.Column(db.String(255), nullable=False, info='微信支付交易号')
+    prepay_id = db.Column(db.String(255), nullable=False, unique=True, info='微信支付交易号')
     openid = db.Column(db.String(255), info='用户ID')
     agent_id = db.Column(db.String(255), nullable=False, info='机器人ID')
     combo_id = db.Column(db.Integer, nullable=False, info='套餐ID')
@@ -40,6 +40,9 @@ class BuyUserOrder(db.Model):
     pay_status = db.Column(db.Integer, nullable=False, info='支付状态(0:未支付,1:支付完成)')
     update_time = db.Column(db.DateTime, nullable=False)
     trade_type = db.Column(db.String(255), nullable=False, info='支付类型')
+    allot_time = db.Column(db.Integer, nullable=False, info='使用期限(天)')
+    upper_limit = db.Column(db.Integer, nullable=False, info='使用上限(每天使用上限的次数)')
+    callbakxml = db.Column(db.Text)
 
 
 class BuyUserPermission(db.Model):
