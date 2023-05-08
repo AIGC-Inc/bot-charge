@@ -21,6 +21,7 @@ class BuyCombo(db.Model):
     upper_limit = db.Column(db.SmallInteger, nullable=False, info='使用上限')
     create_time = db.Column(db.DateTime, nullable=False)
     update_time = db.Column(db.DateTime, nullable=False)
+    free_quota = db.Column(db.Integer, nullable=False, server_default=db.FetchedValue(), info='体验次数')
 
 
 class BuyUserOrder(db.Model):
@@ -42,6 +43,7 @@ class BuyUserOrder(db.Model):
     allot_time = db.Column(db.Integer, nullable=False, info='使用期限(天)')
     upper_limit = db.Column(db.Integer, nullable=False, info='使用上限(每天使用上限的次数)')
     callbakxml = db.Column(db.Text)
+    browser_type = db.Column(db.Integer, info='支付时使用的浏览器，1:微信浏览器,2:企业微信浏览器')
 
 
 class BuyUserPermission(db.Model):

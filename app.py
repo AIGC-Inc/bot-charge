@@ -83,14 +83,20 @@ def check_User_Permissions():
         print(update_time, type(update_time))
         # 判断是否失效
         if update_time.date() < datetime.now().date():
+            combo = BuyCombo.query.filter_by(agent_id=agent_id).first()
             if user_perms.expire_time > datetime.now():
-                combo = BuyCombo.query.filter_by(agent_id=agent_id).first()
                 user_perms.margin = combo.upper_limit
+                user_perms.update_time = datetime.now()
+                db.session.commit()
+                return jsonify(result="1")
             else:
-                user_perms.margin = 3
-            user_perms.update_time = datetime.now()
-            db.session.commit()
-            return jsonify(result="1")
+                user_perms.margin = combo.free_quota
+                user_perms.update_time = datetime.now()
+                db.session.commit()
+                if combo.free_quota > 0:
+                    return jsonify(result="1")
+                else:
+                    return jsonify(result="0")
         else:
             if user_perms.margin > 0:
                 return jsonify(result="1")
@@ -98,12 +104,16 @@ def check_User_Permissions():
                 return jsonify(result="0")
     else:
         try:
-            user1 = BuyUserPermission(user_id=user_id, agent_id=agent_id, margin=3, status=1, use_count=0,
+            combo = BuyCombo.query.filter_by(agent_id=agent_id).first()
+            user1 = BuyUserPermission(user_id=user_id, agent_id=agent_id, margin=combo.free_quota, status=1, use_count=0,
                                       expire_time=datetime.now(), create_time=datetime.now(),
                                       update_time=datetime.now())
             db.session.add(user1)
             db.session.commit()
-            return jsonify(result="1")
+            if combo.free_quota > 0:
+                return jsonify(result="1")
+            else:
+                return jsonify(result="0")
         except Exception as e:
             print("check-user", e)
             db.session.rollback()
