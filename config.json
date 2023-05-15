@@ -1,0 +1,14 @@
+{
+  "port": 6089,
+  "login_time": 30,
+  "db_conf": {
+    "host": "localhost",
+    "port": "3306",
+    "database": "bot_charge",
+    "username": "bot_charge",
+    "password": "123"
+  },
+  "users": {
+    "combo": "pHvbFW0B"
+  }
+}
