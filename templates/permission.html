@@ -39,12 +39,17 @@
     </style>
 </head>
 <body>
-<h1 style="display: flex; justify-content: space-around;">
+<h1>
     <a href="/permission">用户权限列表</a>
-    <a href="/combo">套餐列表</a></h1>
+</h1>
 <form method="post" action="{{ url_for('add_permission') }}">
     <input type="text" name="user_id" placeholder="用户ID">
-    <input type="text" name="agent_id" placeholder="机器人ID">
+{#    <input type="text" name="agent_id" placeholder="机器人ID">#}
+    <select name="combo_id">
+        {% for combo in combos %}
+        <option value="{{ combo.combo_id }}">{{ combo.combo_name }}</option>
+        {% endfor %}
+    </select>
     <input type="number" name="margin" placeholder="当天可使用次数" min="0" step="1">
     <input type="datetime-local" name="expire_time" placeholder="套餐过期时间">
     {#    <input type="datetime-local" name="update_time" placeholder="上次使用时间">#}
@@ -53,7 +58,12 @@
 
 <form method="get" action="{{ url_for('search_permission') }}">
     <input type="text" name="user_id" placeholder="用户ID">
-    <input type="text" name="agent_id" placeholder="机器人ID">
+{#    <input type="text" name="agent_id" placeholder="机器人ID">#}
+    <select name="agent_id">
+        {% for combo in combos %}
+        <option value="{{ combo.agent_id }}">{{ combo.combo_name }}</option>
+        {% endfor %}
+    </select>
     <button type="submit">搜索</button>
 </form>
 

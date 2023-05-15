@@ -137,141 +137,144 @@ def user_Charge():
         return jsonify(result=False)
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username in conf["users"].keys() and password == conf["users"].get(username, ""):
-            # 登录成功,设置session
-            session['logged_in'] = True
-            session['username'] = username
-            session['login_time'] = datetime.now().timestamp()
-            return redirect(url_for('index'))
-        else:
-            return render_template('login.html', error=True)
-    return render_template('login.html')
+class Views:
+    def __init__(self):
+        self.combo = BuyCombo.query.limit(20).all()
 
+    @staticmethod
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            if username in conf["users"].keys() and password == conf["users"].get(username, ""):
+                # 登录成功,设置session
+                session['logged_in'] = True
+                session['username'] = username
+                session['login_time'] = datetime.now().timestamp()
+                return redirect(url_for('index'))
+            else:
+                return render_template('login.html', error=True)
+        return render_template('login.html')
 
-@app.route('/')
-@login_required
-def index():
-    return render_template('index.html')
+    @staticmethod
+    @app.route('/')
+    @login_required
+    def index():
+        return render_template('index.html')
 
+    @staticmethod
+    @app.route('/combo/')
+    @login_required
+    def combo():
+        return render_template('combo.html', combos=Views().combo)
 
-@app.route('/combo/')
-@login_required
-def combo():
-    combos = BuyCombo.query.limit(20).all()
-    return render_template('combo.html', combos=combos)
+    @staticmethod
+    @app.route('/combo/add', methods=['POST'])
+    @login_required
+    def add_combo():
+        try:
+            new_combo = BuyCombo(agent_id=request.form['agent_id'], combo_name=request.form['combo_name'],
+                                 combo_price=request.form['combo_price'], free_quota=request.form['free_quota'],
+                                 allot_time=request.form['allot_time'], upper_limit=request.form['upper_limit'],
+                                 create_time=datetime.now(), update_time=datetime.now())
+            db.session.add(new_combo)
+            db.session.commit()
+            return redirect(url_for('combo'))
+        except Exception as e:
+            print("add_combo", e)
+            db.session.rollback()
+            return jsonify(result="添加套餐：%s 失败" % request.form['combo_name'])
 
+    @staticmethod
+    @app.route('/combo/update/<int:combo_id>', methods=['POST'])
+    @login_required
+    def update_combo(combo_id):
+        try:
+            combo = BuyCombo.query.filter_by(combo_id=combo_id).update(
+                {"combo_price": request.form["combo_price"], "allot_time": request.form["allot_time"],
+                 "upper_limit": request.form["upper_limit"], "free_quota": request.form["free_quota"],
+                 "combo_name": request.form["combo_name"], "update_time": datetime.now()})
+            db.session.commit()
+            return redirect(url_for('combo'))
+        except Exception as e:
+            print("update_combo", e)
+            db.session.rollback()
+            return jsonify(result="修改套餐：%s 失败" % request.form['combo_name'])
 
-@app.route('/combo/add', methods=['POST'])
-@login_required
-def add_combo():
-    try:
-        new_combo = BuyCombo(agent_id=request.form['agent_id'], combo_name=request.form['combo_name'],
-                             combo_price=request.form['combo_price'], free_quota=request.form['free_quota'],
-                             allot_time=request.form['allot_time'], upper_limit=request.form['upper_limit'],
-                             create_time=datetime.now(), update_time=datetime.now())
-        db.session.add(new_combo)
-        db.session.commit()
-        return redirect(url_for('combo'))
-    except Exception as e:
-        print("add_combo", e)
-        db.session.rollback()
-        return jsonify(result="添加套餐：%s 失败" % request.form['combo_name'])
+    @staticmethod
+    @app.route('/combo/delete/<int:combo_id>')
+    @login_required
+    def delete_combo(combo_id):
+        try:
+            combo = BuyCombo.query.filter(BuyCombo.combo_id == combo_id).delete()
+            db.session.commit()
+            return redirect(url_for('combo'))
+        except Exception as e:
+            print("delete_combo", e)
+            db.session.rollback()
+            return jsonify(result="删除套餐ID：%s 失败" % combo_id)
 
+    @staticmethod
+    @app.route('/permission')
+    @login_required
+    def permission():
+        permissions = BuyUserPermission.query.order_by(BuyUserPermission.update_time.desc()).limit(20).all()
+        return render_template('permission.html', permissions=permissions, combos=Views().combo)
 
-@app.route('/combo/update/<int:combo_id>', methods=['POST'])
-@login_required
-def update_combo(combo_id):
-    try:
-        combo = BuyCombo.query.filter_by(combo_id=combo_id).update(
-            {"combo_price": request.form["combo_price"], "allot_time": request.form["allot_time"],
-             "upper_limit": request.form["upper_limit"], "free_quota": request.form["free_quota"],
-             "combo_name": request.form["combo_name"], "update_time": datetime.now()})
-        db.session.commit()
-        return redirect(url_for('combo'))
-    except Exception as e:
-        print("update_combo", e)
-        db.session.rollback()
-        return jsonify(result="修改套餐：%s 失败" % request.form['combo_name'])
+    @staticmethod
+    @app.route('/search')
+    @login_required
+    def search_permission():
+        permissions = BuyUserPermission.query.filter(BuyUserPermission.agent_id == request.args.get('agent_id')).filter(
+            BuyUserPermission.user_id.like('%{}%'.format(request.args.get('user_id')))).limit(20).all()
+        return render_template('permission.html', permissions=permissions, combos=Views().combo)
 
+    @staticmethod
+    @app.route('/permission/add', methods=['POST'])
+    @login_required
+    def add_permission():
+        try:
+            combo = BuyCombo.query.filter_by(combo_id=request.form.get('combo_id')).first()
+            user1 = BuyUserPermission(user_id=request.form.get('user_id'), agent_id=combo.agent_id, status=1,
+                                      margin=request.form.get('margin'), expire_time=request.form.get('expire_time'),
+                                      use_count=0, create_time=datetime.now(), update_time=datetime.now())
+            db.session.add(user1)
+            db.session.commit()
+            return render_template('permission.html', permissions=[user1], combos=Views().combo)
+        except Exception as e:
+            print("add_permission", e)
+            db.session.rollback()
+            return jsonify(result="添加权限失败，user_id：%s" % request.args.get('user_id'))
 
-@app.route('/combo/delete/<int:combo_id>')
-@login_required
-def delete_combo(combo_id):
-    try:
-        combo = BuyCombo.query.filter(BuyCombo.combo_id == combo_id).delete()
-        db.session.commit()
-        return redirect(url_for('combo'))
-    except Exception as e:
-        print("delete_combo", e)
-        db.session.rollback()
-        return jsonify(result="删除套餐ID：%s 失败" % combo_id)
+    @staticmethod
+    @app.route('/permission/invalid/<int:permission_id>')
+    @login_required
+    def invalid_permission(permission_id):
+        try:
+            permission = BuyUserPermission.query.filter_by(id=permission_id).update(
+                {"margin": 0, "update_time": datetime.now(), "expire_time": datetime.now() - timedelta(1)})
+            db.session.commit()
+            return redirect(url_for('permission'))
+        except Exception as e:
+            print("invalid_permission", e)
+            db.session.rollback()
+            return jsonify(result="失效失败")
 
-
-@app.route('/permission')
-@login_required
-def permission():
-    permissions = BuyUserPermission.query.order_by(BuyUserPermission.update_time.desc()).limit(20).all()
-    return render_template('permission.html', permissions=permissions)
-
-
-@app.route('/search')
-@login_required
-def search_permission():
-    permissions = BuyUserPermission.query.filter(BuyUserPermission.agent_id == request.args.get('agent_id')).filter(
-        BuyUserPermission.user_id.like('%{}%'.format(request.args.get('user_id')))).limit(20).all()
-    return render_template('permission.html', permissions=permissions)
-
-
-@app.route('/permission/add', methods=['POST'])
-@login_required
-def add_permission():
-    try:
-        combo = BuyCombo.query.filter_by(agent_id=request.args.get('agent_id')).first()
-        user1 = BuyUserPermission(user_id=request.args.get('user_id'), agent_id=request.args.get('agent_id'), status=1,
-                                  margin=combo.free_quota, use_count=0, expire_time=request.args.get('expire_time'),
-                                  create_time=request.args.get('create_time'),
-                                  update_time=request.args.get('update_time'))
-        db.session.add(user1)
-        db.session.commit()
-        render_template('permission.html', permission=user1)
-    except Exception as e:
-        print("add_permission", e)
-        db.session.rollback()
-        return jsonify(result="添加权限失败，user_id：%s" % request.args.get('user_id'))
-
-
-@app.route('/permission/invalid/<int:permission_id>')
-@login_required
-def invalid_permission(permission_id):
-    try:
-        permission = BuyUserPermission.query.filter_by(id=permission_id).update(
-            {"margin": 0, "update_time": datetime.now(), "expire_time": datetime.now() - timedelta(1)})
-        db.session.commit()
-        return redirect(url_for('permission'))
-    except Exception as e:
-        print("invalid_permission", e)
-        db.session.rollback()
-        return jsonify(result="失效失败")
-
-
-@app.route('/permission/update', methods=['POST'])
-@login_required
-def update_permission():
-    try:
-        user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(
-            {"margin": request.form.get('margin'), "expire_time": request.form.get('expire_time'),
-             "update_time": request.form.get('update_time')})
-        db.session.commit()
-        return redirect(url_for('permission'))
-    except Exception as e:
-        print("update_permission", e)
-        db.session.rollback()
-        return jsonify(result="修改用户：%s 失败" % request.args.get('user_id'))
+    @staticmethod
+    @app.route('/permission/update', methods=['POST'])
+    @login_required
+    def update_permission():
+        try:
+            user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(
+                {"margin": request.form.get('margin'), "expire_time": request.form.get('expire_time'),
+                 "update_time": request.form.get('update_time')})
+            db.session.commit()
+            return redirect(url_for('permission'))
+        except Exception as e:
+            print("update_permission", e)
+            db.session.rollback()
+            return jsonify(result="修改用户：%s 失败" % request.args.get('user_id'))
 
 
 # python app.py >charge.log 2>&1 &
