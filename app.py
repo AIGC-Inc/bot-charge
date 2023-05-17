@@ -178,6 +178,7 @@ def add_combo():
     try:
         new_combo = BuyCombo(agent_id=agent_id, combo_name=combo_name, combo_price=request.form['combo_price'],
                              free_quota=request.form['free_quota'], allot_time=request.form['allot_time'],
+                             corp_id=request.form['corp_id'], secret=request.form['secret'],
                              upper_limit=request.form['upper_limit'], create_time=datetime.now(),
                              update_time=datetime.now())
         db.session.add(new_combo)
