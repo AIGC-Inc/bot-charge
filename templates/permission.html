@@ -7,11 +7,11 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
 
         form {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         table {
@@ -39,8 +39,9 @@
     </style>
 </head>
 <body>
-<h1>
-    <a href="/permission">用户权限列表</a>
+<h1 style="display: flex; justify-content: space-evenly;">
+    <a href="/combo">应用套餐管理</a>
+    <a href="/permission">用户权限管理</a>
 </h1>
 <form method="post" action="{{ url_for('add_permission') }}">
     <input type="text" name="user_id" placeholder="用户ID">
@@ -69,7 +70,7 @@
     <tr>
         <th>权限ID</th>
         <th>用户ID</th>
-        <th>机器人ID</th>
+        <th>应用ID</th>
         <th>当天/昨天余量</th>
         <th>套餐过期时间</th>
         <th>上次使用时间</th>
