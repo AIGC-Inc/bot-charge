@@ -22,6 +22,8 @@ class BuyCombo(db.Model):
     create_time = db.Column(db.DateTime, nullable=False)
     update_time = db.Column(db.DateTime, nullable=False)
     free_quota = db.Column(db.Integer, nullable=False, server_default=db.FetchedValue(), info='体验次数')
+    corp_id = db.Column(db.String(255), comment='企业微信的corp_id')
+    secret = db.Column(db.String(255), comment='应用的secret')
 
 
 class BuyUserOrder(db.Model):

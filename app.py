@@ -20,18 +20,6 @@ config_path = os.path.join(os.path.dirname(__file__), "config.json")
 conf = json.load(open(config_path, "r", encoding="utf-8"))
 
 
-class Common:
-    __instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls.__instance:
-            cls.__instance = object.__new__(cls)
-        return cls.__instance
-
-    def __init__(self):
-        self.combo = BuyCombo.query.limit(20).all()
-
-
 def api_try(fn):
     @wraps(fn)
     def f(*args, **kwargs):
@@ -63,6 +51,10 @@ def creat_app():
 
 app = creat_app()
 app.secret_key = 'secret'
+
+
+def get_combo():
+    return BuyCombo.query.limit(20).all()
 
 
 def login_required(func):
@@ -175,7 +167,7 @@ def index():
 @app.route('/combo/')
 @login_required
 def combo():
-    return render_template('combo.html', combos=Common().combo)
+    return render_template('combo.html', combos=get_combo())
 
 
 @app.route('/combo/add', methods=['POST'])
@@ -242,7 +234,7 @@ def delete_combo(combo_id):
 @login_required
 def permission():
     permissions = BuyUserPermission.query.order_by(BuyUserPermission.update_time.desc()).limit(20).all()
-    return render_template('permission.html', permissions=permissions, combos=Common().combo)
+    return render_template('permission.html', permissions=permissions, combos=get_combo())
 
 
 @app.route('/search')
@@ -250,7 +242,7 @@ def permission():
 def search_permission():
     permissions = BuyUserPermission.query.filter(BuyUserPermission.agent_id == request.args.get('agent_id')).filter(
         BuyUserPermission.user_id.like('%{}%'.format(request.args.get('user_id')))).limit(20).all()
-    return render_template('permission.html', permissions=permissions, combos=Common().combo)
+    return render_template('permission.html', permissions=permissions, combos=get_combo())
 
 
 @app.route('/permission/add', methods=['POST'])
@@ -264,7 +256,7 @@ def add_permission():
                                   use_count=0, create_time=datetime.now(), update_time=datetime.now())
         db.session.add(user1)
         db.session.commit()
-        return render_template('permission.html', permissions=[user1], combos=Common().combo)
+        return render_template('permission.html', permissions=[user1], combos=get_combo())
     except exc.IntegrityError as e:
         print("MySQLdb.InternalError", e)
         db.session.rollback()
