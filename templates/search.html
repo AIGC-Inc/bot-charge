@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}用户权限管理{% endblock %}
+{% block index %}{% endblock %}
+{% block content %}
+    <div style="display: flex; justify-content: space-between;">
+        <form method="get" action="{{ url_for('search_permission') }}">
+            <input type="text" name="user_id" placeholder="用户ID">
+            <button type="submit">搜索</button>
+        </form>
+        <div class="pagination">
+            <nav>
+                <div class="pagination">
+                    {% if permissions.pages > 1 %}
+                        {% if permissions.has_prev %}
+                            <a href="{{ url_for('search_permission', page=permissions.prev_num, user_id=req_data.get("user_id")) }}">
+                                <span aria-hidden="true">«</span>
+                            </a>
+                        {% endif %}
+                        {% for page_num in permissions.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num == permissions.page %}
+                                    <a>{{ page_num }}</a>
+                                {% else %}
+                                    <a href="{{ url_for('search_permission', page=page_num, user_id=req_data.get("user_id")) }}">{{ page_num }}</a>
+                                {% endif %}
+                            {% else %}
+                                <a>...</a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if permissions.has_next %}
+                            <a href="{{ url_for('search_permission', page=permissions.next_num, user_id=req_data.get("user_id")) }}">
+                                <span aria-hidden="true">»</span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </nav>
+            <div>
+                {#                                从第 {{ permissions.page * permissions.per_page - (permissions.per_page - 1) }} 到 {{ permissions.page * permissions.per_page }}，共 {{ permissions.total }}#}
+            </div>
+        </div>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>权限ID</th>
+            <th>用户ID</th>
+            <th>应用ID</th>
+            {#            <th>当天/昨天余量</th>#}
+            <th>套餐过期时间</th>
+            <th>增加期限</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for permission in permissions.items %}
+            <tr>
+                <td>{{ permission.id }}</td>
+                <td>{{ permission.user_id }}</td>
+                <td>{{ permission.agent_id }}</td>
+                <td>{{ permission.expire_time }}</td>
+
+                <form method="post" action="{{ url_for('update_permission', id=permission.id) }}">
+                    {#                    <td><input type="number" name="margin" value="{{ permission.margin }}" min="0" step="1"></td>#}
+                    {#                    <td><input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss"#}
+                    {#                               value="{{ permission.expire_time }}"></td>#}
+                    <td><input type="number" name="date_num" value="0" min="0" step="1"></td>
+                    <td>
+                        <button type="submit">增加日期</button>
+                    </td>
+                </form>
+                <td>
+                    <form method="get" action="{{ url_for('invalid_permission', permission_id=permission.id) }}">
+                        <button type="submit">失效</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div style="margin: 10px; padding-top: 5px"></div>
+    <div class="pagination">
+        <nav>
+            <div class="pagination">
+                {% if permissions.pages > 1 %}
+                    {% if permissions.has_prev %}
+                        <a href="{{ url_for('search_permission', page=permissions.prev_num, user_id=req_data.get("user_id")) }}">
+                            <span aria-hidden="true">«</span>
+                        </a>
+                    {% endif %}
+                    {% for page_num in permissions.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == permissions.page %}
+                                <a>{{ page_num }}</a>
+                            {% else %}
+
+                                <a href="{{ url_for('search_permission', page=page_num, user_id=req_data.get("user_id")) }}">{{ page_num }}</a>
+
+                            {% endif %}
+                        {% else %}
+                            <a>...</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if permissions.has_next %}
+                        <a href="{{ url_for('search_permission', page=permissions.next_num, user_id=req_data.get("user_id")) }}">
+                            <span aria-hidden="true">»</span>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </nav>
+        <div>
+            {#                                从第 {{ permissions.page * permissions.per_page - (permissions.per_page - 1) }} 到 {{ permissions.page * permissions.per_page }}，共 {{ permissions.total }}#}
+        </div>
+    </div>
+
+    </div>
+    <div style="margin: 10px; padding: 10px"></div>
+{% endblock %}
+

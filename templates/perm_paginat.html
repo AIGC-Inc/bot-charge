@@ -1,0 +1,32 @@
+<div class="pagination">
+    <nav>
+        <div class="pagination">
+            {% if permissions.pages > 1 %}
+                {% if permissions.has_prev %}
+                    <a href="{{ url_for('permission', page=permissions.prev_num) }}">
+                        <span aria-hidden="true">«</span>
+                    </a>
+                {% endif %}
+                {% for page_num in permissions.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == permissions.page %}
+                            <a>{{ page_num }}</a>
+                        {% else %}
+                            <a href="{{ url_for('permission', page=page_num) }}">{{ page_num }}</a>
+                        {% endif %}
+                    {% else %}
+                        <a>...</a>
+                    {% endif %}
+                {% endfor %}
+                {% if permissions.has_next %}
+                    <a href="{{ url_for('permission', page=permissions.next_num ) }}">
+                        <span aria-hidden="true">»</span>
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </nav>
+    <div>
+        {#                                从第 {{ permissions.page * permissions.per_page - (permissions.per_page - 1) }} 到 {{ permissions.page * permissions.per_page }}，共 {{ permissions.total }}#}
+    </div>
+</div>

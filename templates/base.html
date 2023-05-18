@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}购买套餐系统{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/static/script.js"></script>
+</head>
+<body>
+<header>
+    <h1>{% block index %}购买套餐系统管理{% endblock %}</h1>
+    <h2>
+        <a href="/combo">应用套餐管理</a>
+        <a href="/permission">用户权限管理</a>
+    </h2>
+</header>
+<div>
+    {% block content %}{% endblock %}
+</div>
+<footer>
+    <!-- 页脚内容 -->
+    {% block footer %}{% endblock %}
+</footer>
+</body>
+</html>

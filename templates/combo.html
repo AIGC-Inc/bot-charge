@@ -1,102 +1,65 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <title>应用套餐管理</title>
-    <style type="text/css">
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 10px;
-        }
+{% extends 'base.html' %}
 
-        form {
-            margin-bottom: 10px;
-        }
+{% block title %}应用套餐管理{% endblock %}
+{% block index %}{% endblock %}
+{% block content %}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    <form method="post" action="{{ url_for('add_combo') }}">
+        <input type="text" name="agent_id" placeholder="应用ID">
+        <input type="text" name="combo_name" placeholder="套餐名称">
+        <input type="number" name="combo_price" placeholder="套餐价格" min="0" step="0.01">
+        <input type="number" name="allot_time" placeholder="使用期限" min="0" step="1">
+        <input type="number" name="upper_limit" placeholder="使用上限" min="0" step="1">
+        <input type="number" name="free_quota" placeholder="体验次数" min="0" step="1">
+        <input type="text" name="corp_id" placeholder="企业微信corp_id">
+        <input type="text" name="secret" placeholder="应用secret">
+        <button type="submit">添加套餐</button>
+    </form>
 
-        th, td {
-            border: 1px solid #ccc;
-            padding-top: 1px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        input {
-            font-size: medium;
-        }
-
-        button {
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-<h1 style="display: flex; justify-content: space-evenly;">
-    <a href="/combo">应用套餐管理</a>
-    <a href="/permission">用户权限管理</a></h1>
-<form method="post" action="{{ url_for('add_combo') }}">
-    <input type="text" name="agent_id" placeholder="应用ID">
-    <input type="text" name="combo_name" placeholder="套餐名称">
-    <input type="number" name="combo_price" placeholder="套餐价格" min="0" step="0.01">
-    <input type="number" name="allot_time" placeholder="使用期限" min="0" step="1">
-    <input type="number" name="upper_limit" placeholder="使用上限" min="0" step="1">
-    <input type="number" name="free_quota" placeholder="体验次数" min="0" step="1">
-    <input type="text" name="corp_id" placeholder="企业微信corp_id">
-    <input type="text" name="secret" placeholder="应用secret">
-    <button type="submit">添加套餐</button>
-</form>
-
-<table>
-    <thead>
-    <tr>
-        <th>套餐ID</th>
-        <th>应用ID</th>
-        <th>套餐名称</th>
-        <th>套餐价格</th>
-        <th>使用期限</th>
-        <th>使用上限</th>
-        <th>体验次数</th>
-        {#        <th>企业微信corp_id</th>#}
-        {#        <th>应用secret</th>#}
-        <th>创建时间</th>
-        <th>更新时间</th>
-        <th>操作</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for combo in combos %}
+    <table>
+        <thead>
         <tr>
-            <td>{{ combo.combo_id }}</td>
-            <td>{{ combo.agent_id }}</td>
-            <form method="post" action="{{ url_for('update_combo', combo_id=combo.combo_id) }}">
-                <td><input type="text" name="combo_name" value="{{ combo.combo_name }}"></td>
-                <td><input type="number" name="combo_price" value="{{ combo.combo_price }}" min="0" step="0.01"></td>
-                <td><input type="number" name="allot_time" value="{{ combo.allot_time }}" min="0" step="1"></td>
-                <td><input type="number" name="upper_limit" value="{{ combo.upper_limit }}" min="0" step="1"></td>
-                <td><input type="number" name="free_quota" value="{{ combo.free_quota }}" min="0" step="1"></td>
-                {#                <td>{{ combo.corp_id }}</td>#}
-                {#                <td>{{ combo.secret }}</td>#}
-                <td>{{ combo.create_time }}</td>
-                <td>{{ combo.update_time }}</td>
-                <td>
-                    <button type="submit">更新</button>
-                </td>
-            </form>
-            <td>
-                <form method="get" action="{{ url_for('delete_combo', combo_id=combo.combo_id) }}">
-                    <button type="submit">删除</button>
-                </form>
-            </td>
+            <th>套餐ID</th>
+            <th>应用ID</th>
+            <th>套餐名称</th>
+            <th>套餐价格</th>
+            <th>使用期限</th>
+            <th>使用上限</th>
+            <th>体验次数</th>
+            <th>企业微信corp_id</th>
+            <th>应用secret</th>
+            <th>创建时间</th>
+            <th>更新时间</th>
+            <th>操作</th>
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
-</body>
-</html>
+        </thead>
+        <tbody>
+        {% for combo in combos %}
+            <tr>
+                <td>{{ combo.combo_id }}</td>
+                <td>{{ combo.agent_id }}</td>
+                <form method="post" action="{{ url_for('update_combo', combo_id=combo.combo_id) }}">
+                    <td><input type="text" name="combo_name" value="{{ combo.combo_name }}"></td>
+                    <td><input type="number" name="combo_price" value="{{ combo.combo_price }}" min="0" step="0.01">
+                    </td>
+                    <td><input type="number" name="allot_time" value="{{ combo.allot_time }}" min="0" step="1"></td>
+                    <td><input type="number" name="upper_limit" value="{{ combo.upper_limit }}" min="0" step="1"></td>
+                    <td><input type="number" name="free_quota" value="{{ combo.free_quota }}" min="0" step="1"></td>
+                    <td>{{ combo.corp_id }}</td>
+                    <td>{{ combo.secret }}</td>
+                    <td>{{ combo.create_time }}</td>
+                    <td>{{ combo.update_time }}</td>
+                    <td>
+                        <button type="submit">更新</button>
+                    </td>
+                </form>
+                <td>
+                    <form method="get" action="{{ url_for('delete_combo', combo_id=combo.combo_id) }}">
+                        <button type="submit">删除</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

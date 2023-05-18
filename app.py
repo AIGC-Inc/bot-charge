@@ -54,7 +54,7 @@ app.secret_key = 'secret'
 
 
 def get_combo():
-    return BuyCombo.query.limit(20).all()
+    return BuyCombo.query.order_by(BuyCombo.combo_id.desc()).limit(100).all()
 
 
 def login_required(func):
@@ -63,11 +63,29 @@ def login_required(func):
         login_time = session.get('login_time')
         # 检查登录状态和时间
         if not session.get('logged_in') or login_time and login_time < datetime.now().timestamp() - conf.get(
-                "login_time", 10) * 60:
+                "login_time", 10) * 60 * 60 * 24:
             return redirect('/login')
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def search(req: dict) -> object:
+    page = req.get('page', 1)
+    per_page = 100
+    filters = []
+    user_id = req.get('user_id')
+    if user_id:
+        filters.append(BuyUserPermission.user_id.like('%{}%'.format(user_id)))
+    expire_time = req.get('expire_time')
+    if expire_time:
+        filters.append(BuyUserPermission.expire_time > expire_time)
+    print(expire_time)
+    agent_id = req.get('agent_id')
+    if agent_id:
+        filters.append(BuyUserPermission.agent_id == agent_id)
+    print(filters)
+    return BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(page=int(page), per_page=per_page)
 
 
 @app.route('/check-user', methods=["GET"])
@@ -161,13 +179,14 @@ def login():
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    return render_template('base.html')
 
 
 @app.route('/combo/')
 @login_required
 def combo():
-    return render_template('combo.html', combos=get_combo())
+    combos = BuyCombo.query.limit(100).all()
+    return render_template('combo.html', combos=combos)
 
 
 @app.route('/combo/add', methods=['POST'])
@@ -187,19 +206,19 @@ def add_combo():
     except exc.IntegrityError as e:
         print("sqlalchemy.InternalError", e)
         db.session.rollback()
-        return jsonify(result="重复添加，%s, 机器人ID: %s" % (combo_name, agent_id))
+        return jsonify(result="重复添加，%s, 应用ID: %s" % (combo_name, agent_id))
     except exc.OperationalError as e:
         print("sqlalchemy.OperationalError", e)
         db.session.rollback()
-        return jsonify(result="处理数据库异常，%s, 机器人ID: %s" % (combo_name, agent_id))
+        return jsonify(result="处理数据库异常，%s, 应用ID: %s" % (combo_name, agent_id))
     except exc.DataError as e:
         print("sqlalchemy.DataError", e)
         db.session.rollback()
-        return jsonify(result="数据异常，%s, 机器人ID: %s" % (combo_name, agent_id))
+        return jsonify(result="数据异常，%s, 应用ID: %s" % (combo_name, agent_id))
     except Exception as e:
         print("add_combo", e)
         db.session.rollback()
-        return jsonify(result="添加套餐失败，%s, 机器人ID: %s" % (combo_name, agent_id))
+        return jsonify(result="添加套餐失败，%s, 应用ID: %s" % (combo_name, agent_id))
 
 
 @app.route('/combo/update/<int:combo_id>', methods=['POST'])
@@ -234,16 +253,50 @@ def delete_combo(combo_id):
 @app.route('/permission')
 @login_required
 def permission():
-    permissions = BuyUserPermission.query.order_by(BuyUserPermission.update_time.desc()).limit(20).all()
+    req_data = request.values.to_dict()
+    # page = request.args.get('page', 1, type=int)
+    # per_page = 10
+    #
+    # filters = []
+    # user_id = request.args.get('user_id')
+    # if user_id:
+    #     filters.append(BuyUserPermission.user_id.like('%{}%'.format(request.args.get('user_id'))))
+    # expire_time = request.args.get('expire_time')
+    # if expire_time:
+    #     filters.append(BuyUserPermission.expire_time > expire_time)
+    # print(expire_time)
+    # agent_id = request.args.get('agent_id')
+    # if agent_id:
+    #     filters.append(BuyUserPermission.agent_id == agent_id)
+    # print(filters)
+    # permissions = BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(
+    #     page=page, per_page=per_page)
+    permissions = search(req_data)
     return render_template('permission.html', permissions=permissions, combos=get_combo())
 
 
 @app.route('/search')
 @login_required
 def search_permission():
-    permissions = BuyUserPermission.query.filter(BuyUserPermission.agent_id == request.args.get('agent_id')).filter(
-        BuyUserPermission.user_id.like('%{}%'.format(request.args.get('user_id')))).limit(20).all()
-    return render_template('permission.html', permissions=permissions, combos=get_combo())
+    req_data = request.values.to_dict()
+    # page = request.args.get('page', 1, type=int)
+    # per_page = 10
+    # filters = []
+    # user_id = request.args.get('user_id')
+    # if user_id:
+    #     filters.append(BuyUserPermission.user_id.like('%{}%'.format(user_id)))
+    # expire_time = request.args.get('expire_time')
+    # if expire_time:
+    #     filters.append(BuyUserPermission.expire_time > expire_time)
+    # print(expire_time)
+    # agent_id = request.args.get('agent_id')
+    # if agent_id:
+    #     filters.append(BuyUserPermission.agent_id == agent_id)
+    # print(filters)
+    # permissions = BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(
+    #     page=page, per_page=per_page)
+    permissions = search(req_data)
+    return render_template('search.html', permissions=permissions, req_data=req_data)
 
 
 @app.route('/permission/add', methods=['POST'])
@@ -261,19 +314,19 @@ def add_permission():
     except exc.IntegrityError as e:
         print("MySQLdb.InternalError", e)
         db.session.rollback()
-        return jsonify(result="重复添加，用户ID：%s, 机器人ID: %s" % (user_id, agent_id))
+        return jsonify(result="重复添加，用户：%s, 应用ID: %s" % (user_id, agent_id))
     except exc.OperationalError as e:
         print("MySQLdb.OperationalError", e)
         db.session.rollback()
-        return jsonify(result="处理数据库异常，用户ID：%s, 机器人ID: %s" % (user_id, agent_id))
+        return jsonify(result="处理数据库异常，用户：%s, 应用ID: %s" % (user_id, agent_id))
     except exc.DataError as e:
         print("MySQLdb.DataError", e)
         db.session.rollback()
-        return jsonify(result="数据异常，用户ID：%s, 机器人ID: %s" % (user_id, agent_id))
+        return jsonify(result="数据异常，用户：%s, 应用ID: %s" % (user_id, agent_id))
     except Exception as e:
         print("add_permission", e)
         db.session.rollback()
-        return jsonify(result="添加权限失败，用户ID：%s, 机器人ID: %s" % (user_id, agent_id))
+        return jsonify(result="添加权限失败，用户：%s, 应用ID: %s" % (user_id, agent_id))
 
 
 @app.route('/permission/invalid/<int:permission_id>')
@@ -293,16 +346,37 @@ def invalid_permission(permission_id):
 @app.route('/permission/update', methods=['POST'])
 @login_required
 def update_permission():
+    up_user = {}
+    margin = request.form.get('margin')
+    if margin:
+        up_user["margin"] = margin
+    expire_time = request.form.get('expire_time')
+    if expire_time:
+        up_user["expire_time"] = expire_time
+    update_time = request.form.get('update_time')
+    if update_time:
+        up_user["update_time"] = update_time
+    date_num = request.form.get('date_num', type=int)
     try:
-        user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(
-            {"margin": request.form.get('margin'), "expire_time": request.form.get('expire_time'),
-             "update_time": request.form.get('update_time')})
+        if date_num:
+            user_perms = BuyUserPermission.query.filter_by(id=request.args.get('id')).first()
+            expire_time = user_perms.expire_time
+            print(expire_time, type(expire_time))
+            # 判断是否失效
+            if expire_time.date() < datetime.now().date():
+                expire_time = datetime.now() + timedelta(date_num)
+            else:
+                expire_time += timedelta(date_num)
+            user_perms.expire_time = expire_time
+            user_perms.update_time = datetime.now()
+        else:
+            user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(up_user)
         db.session.commit()
         return redirect(url_for('permission'))
     except Exception as e:
         print("update_permission", e)
         db.session.rollback()
-        return jsonify(result="修改用户：%s 失败" % request.args.get('user_id'))
+        return jsonify(result="修改用户：%s 失败" % request.args.get('id'))
 
 
 # python app.py >charge.log 2>&1 &
