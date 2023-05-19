@@ -10,7 +10,7 @@
         <form method="get" action="{{ url_for('search_permission') }}">
             <input type="text" name="user" placeholder="用户ID">
             <input type="text" name="agent_id" placeholder="应用ID">
-            <input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss">
+            <label><input type="checkbox" name="expire_time" value="True">付费用户</label>
             <button type="submit">检索</button>
         </form>
         {% include 'sear_paginat.html' %}
@@ -38,7 +38,7 @@
                     {#                    <td><input type="number" name="margin" value="{{ permission.margin }}" min="0" step="1"></td>#}
                     {#                    <td><input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss"#}
                     {#                               value="{{ permission.expire_time }}"></td>#}
-                    <td><input type="number" name="date_num" value="0" min="0" step="1"></td>
+                    <td><input type="number" name="date_num" value="0" step="1"></td>
                     <td>
                         <button type="submit">增加日期</button>
                     </td>

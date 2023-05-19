@@ -21,7 +21,7 @@
         <form method="get" action="{{ url_for('search_permission') }}">
             <input type="text" name="user" placeholder="用户ID">
             <input type="text" name="agent_id" placeholder="应用ID">
-            <input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss">
+            <label><input type="checkbox" name="expire_time" value="True">付费用户</label>
             <button type="submit">检索</button>
         </form>
         {% include 'perm_paginat.html' %}

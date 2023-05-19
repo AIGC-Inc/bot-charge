@@ -83,9 +83,9 @@ def search(req: object) -> object:
     if userid:
         filters.append(BuyUserPermission.user_id == userid)
     expire_time = req.args.get('expire_time')
-    print("expire_time", expire_time)
+    print("expire_time", expire_time, datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1))
     if expire_time:
-        filters.append(BuyUserPermission.expire_time > expire_time)
+        filters.append(BuyUserPermission.expire_time >= datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1))
     agent_id = req.args.get('agent_id')
     print("agent_id", agent_id)
     if agent_id:
