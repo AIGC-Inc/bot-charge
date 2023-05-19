@@ -72,7 +72,7 @@ def login_required(func):
 
 def search(req: object) -> object:
     page = req.args.get('page', 1)
-    per_page = 2
+    per_page = 100
     filters = []
     user_id = req.args.get('user_id')
     print("user_id", user_id)
