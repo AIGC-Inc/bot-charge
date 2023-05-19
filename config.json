@@ -1,6 +1,6 @@
 {
   "port": 6089,
-  "login_time": 30,
+  "login_time": 7,
   "db_conf": {
     "host": "localhost",
     "port": "3306",

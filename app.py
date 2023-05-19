@@ -71,7 +71,6 @@ def login_required(func):
 
 
 def search(req: object) -> object:
-
     page = req.args.get('page', 1)
     per_page = 2
     filters = []
@@ -92,7 +91,8 @@ def search(req: object) -> object:
     if agent_id:
         filters.append(BuyUserPermission.agent_id == agent_id)
     print(filters)
-    return BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(page=int(page), per_page=per_page)
+    return BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(
+        page=int(page), per_page=per_page)
 
 
 @app.route('/check-user', methods=["GET"])
