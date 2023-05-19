@@ -1,9 +1,7 @@
 {% extends 'base.html' %}
-
 {% block title %}应用套餐管理{% endblock %}
 {% block index %}{% endblock %}
 {% block content %}
-
     <form method="post" action="{{ url_for('add_combo') }}">
         <input type="text" name="agent_id" placeholder="应用ID">
         <input type="text" name="combo_name" placeholder="套餐名称">
@@ -15,7 +13,6 @@
         <input type="text" name="secret" placeholder="应用secret">
         <button type="submit">添加套餐</button>
     </form>
-
     <table>
         <thead>
         <tr>

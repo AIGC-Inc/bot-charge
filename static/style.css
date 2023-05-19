@@ -30,6 +30,9 @@ form {
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 10px;
+    /*overflow-x: auto;*/
+    /*overflow-y: hidden;*/
 }
 
 th, td {
@@ -39,20 +42,22 @@ th, td {
 }
 
 td {
-  max-width: 120px;   /* 限制单元格最大宽度 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    width: 80px;   /* 限制单元格最大宽度 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 th {
     background-color: #f2f2f2;
+    /*width: 100px;*/
 }
 
 input {
     font-size: medium;
+    /*width: 100px;*/
 }
 
-button {
-    cursor: pointer;
-}
+/*button {*/
+/*    cursor: pointer;*/
+/*}*/

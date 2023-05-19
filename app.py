@@ -70,18 +70,25 @@ def login_required(func):
     return wrapper
 
 
-def search(req: dict) -> object:
-    page = req.get('page', 1)
-    per_page = 100
+def search(req: object) -> object:
+
+    page = req.args.get('page', 1)
+    per_page = 2
     filters = []
-    user_id = req.get('user_id')
+    user_id = req.args.get('user_id')
+    print("user_id", user_id)
     if user_id:
         filters.append(BuyUserPermission.user_id.like('%{}%'.format(user_id)))
-    expire_time = req.get('expire_time')
+    userid = req.args.get('user')
+    print("userid", userid)
+    if userid:
+        filters.append(BuyUserPermission.user_id == userid)
+    expire_time = req.args.get('expire_time')
+    print("expire_time", expire_time)
     if expire_time:
         filters.append(BuyUserPermission.expire_time > expire_time)
-    print(expire_time)
-    agent_id = req.get('agent_id')
+    agent_id = req.args.get('agent_id')
+    print("agent_id", agent_id)
     if agent_id:
         filters.append(BuyUserPermission.agent_id == agent_id)
     print(filters)
@@ -253,7 +260,7 @@ def delete_combo(combo_id):
 @app.route('/permission')
 @login_required
 def permission():
-    req_data = request.values.to_dict()
+    # req_data = request.values.to_dict()
     # page = request.args.get('page', 1, type=int)
     # per_page = 10
     #
@@ -271,7 +278,7 @@ def permission():
     # print(filters)
     # permissions = BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(
     #     page=page, per_page=per_page)
-    permissions = search(req_data)
+    permissions = search(request)
     return render_template('permission.html', permissions=permissions, combos=get_combo())
 
 
@@ -295,7 +302,10 @@ def search_permission():
     # print(filters)
     # permissions = BuyUserPermission.query.filter(*filters).order_by(BuyUserPermission.update_time.desc()).paginate(
     #     page=page, per_page=per_page)
-    permissions = search(req_data)
+    permissions = search(request)
+    print(req_data)
+    if req_data.get("page", ""):
+        req_data.pop("page")
     return render_template('search.html', permissions=permissions, req_data=req_data)
 
 
@@ -310,7 +320,8 @@ def add_permission():
                                   use_count=0, create_time=datetime.now(), update_time=datetime.now())
         db.session.add(user1)
         db.session.commit()
-        return render_template('permission.html', permissions=[user1], combos=get_combo())
+        # return render_template('permission.html', permissions=user1, combos=get_combo())
+        return redirect(url_for('permission'))
     except exc.IntegrityError as e:
         print("MySQLdb.InternalError", e)
         db.session.rollback()
