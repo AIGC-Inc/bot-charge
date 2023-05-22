@@ -7,16 +7,16 @@
 </head>
 <body>
 <header>
-    <h1>{% block index %}购买套餐系统管理{% endblock %}</h1>
+    {% block index %}<h1>购买套餐系统管理</h1>{% endblock %}
     <h2>
         <a href="/combo">应用套餐管理</a>
         <a href="/permission">用户权限管理</a>
     </h2>
 </header>
 {% block content %}{% endblock %}
-<footer>
-    <!-- 页脚内容 -->
-    {% block footer %}{% endblock %}
-</footer>
+{#<footer>#}
+{#    <!-- 页脚内容 -->#}
+{#    {% block footer %}{% endblock %}#}
+{#</footer>#}
 </body>
 </html>

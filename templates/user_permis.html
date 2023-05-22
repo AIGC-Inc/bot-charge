@@ -1,10 +1,7 @@
 {% extends 'permission.html' %}
 {% block title %}用户权限管理{% endblock %}
 {% block index %}{% endblock %}
-
-{% block paginat %}
-    {% include 'sear_paginat.html' %}
-{% endblock %}
+{% block paginat %}<div></div>{% endblock %}
 {% block permission %}
     <table>
         <thead>
@@ -19,7 +16,6 @@
         </tr>
         </thead>
         <tbody>
-        {% for permission in permissions.items %}
             <tr>
                 <td>{{ permission.id }}</td>
                 <td>{{ permission.user_id }}</td>
@@ -27,8 +23,6 @@
                 <td>{{ permission.expire_time }}</td>
                 <form method="post" action="{{ url_for('update_permission', id=permission.id) }}">
                     <td><input type="number" name="margin" value="{{ permission.margin }}" min="0" step="1"></td>
-                    {#                    <td><input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss"#}
-                    {#                               value="{{ permission.expire_time }}"></td>#}
                     <td><input type="number" name="date_num" value="0" step="1"></td>
                     <td>
                         <button type="submit">增加日期</button>
@@ -40,12 +34,8 @@
                     </form>
                 </td>
             </tr>
-        {% endfor %}
         </tbody>
     </table>
-    <div style="margin: 10px; padding-top: 5px"></div>
-    {% include 'sear_paginat.html' %}
-    <div style="margin: 10px; padding: 10px"></div>
 {% endblock %}
 
 

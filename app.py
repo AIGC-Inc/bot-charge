@@ -306,7 +306,7 @@ def search_permission():
     print(req_data)
     if req_data.get("page", ""):
         req_data.pop("page")
-    return render_template('search.html', permissions=permissions, req_data=req_data)
+    return render_template('search.html', permissions=permissions, req_data=req_data, combos=get_combo())
 
 
 @app.route('/permission/add', methods=['POST'])
@@ -320,8 +320,8 @@ def add_permission():
                                   use_count=0, create_time=datetime.now(), update_time=datetime.now())
         db.session.add(user1)
         db.session.commit()
-        # return render_template('permission.html', permissions=user1, combos=get_combo())
-        return redirect(url_for('permission'))
+        return render_template('user_permis.html', permission=user1, combos=get_combo())
+        # return redirect(url_for('permission'))
     except exc.IntegrityError as e:
         print("MySQLdb.InternalError", e)
         db.session.rollback()
@@ -347,7 +347,9 @@ def invalid_permission(permission_id):
         permission = BuyUserPermission.query.filter_by(id=permission_id).update(
             {"margin": 0, "update_time": datetime.now(), "expire_time": datetime.now() - timedelta(1)})
         db.session.commit()
-        return redirect(url_for('permission'))
+        _perm = BuyUserPermission.query.filter_by(id=permission_id).first()
+        return render_template('user_permis.html', permission=_perm, combos=get_combo())
+        # return redirect(url_for('permission'))
     except Exception as e:
         print("invalid_permission", e)
         db.session.rollback()
@@ -357,20 +359,21 @@ def invalid_permission(permission_id):
 @app.route('/permission/update', methods=['POST'])
 @login_required
 def update_permission():
-    up_user = {}
+    # up_user = {}
+    perm_id = request.args.get('id')
     margin = request.form.get('margin')
-    if margin:
-        up_user["margin"] = margin
-    expire_time = request.form.get('expire_time')
-    if expire_time:
-        up_user["expire_time"] = expire_time
-    update_time = request.form.get('update_time')
-    if update_time:
-        up_user["update_time"] = update_time
+    # if margin:
+    #     up_user["margin"] = margin
+    # expire_time = request.form.get('expire_time')
+    # if expire_time:
+    #     up_user["expire_time"] = expire_time
+    # update_time = request.form.get('update_time')
+    # if update_time:
+    #     up_user["update_time"] = update_time
     date_num = request.form.get('date_num', type=int)
     try:
+        user_perms = BuyUserPermission.query.filter_by(id=perm_id).first()
         if date_num:
-            user_perms = BuyUserPermission.query.filter_by(id=request.args.get('id')).first()
             expire_time = user_perms.expire_time
             print(expire_time, type(expire_time))
             # 判断是否失效
@@ -379,11 +382,16 @@ def update_permission():
             else:
                 expire_time += timedelta(date_num)
             user_perms.expire_time = expire_time
-            user_perms.update_time = datetime.now()
-        else:
-            user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(up_user)
+        if margin:
+            user_perms.margin = margin
+        user_perms.update_time = datetime.now()
+        # else:
+        #     user_update = BuyUserPermission.query.filter(BuyUserPermission.id == request.args.get('id')).update(up_user)
         db.session.commit()
-        return redirect(url_for('permission'))
+        print(user_perms.update_time)
+        _perm = BuyUserPermission.query.filter_by(id=perm_id).first()
+        return render_template('user_permis.html', permission=_perm, combos=get_combo())
+        # return redirect(url_for('permission'))
     except Exception as e:
         print("update_permission", e)
         db.session.rollback()
