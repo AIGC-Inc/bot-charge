@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import traceback
 from functools import wraps
 from zoneinfo import ZoneInfo
-from sqlalchemy import exc
+from sqlalchemy import exc, func
 from flask import Flask, jsonify, request, redirect, render_template, url_for, session
 from gevent import pywsgi
 from models import *
@@ -85,7 +85,8 @@ def search(req: object) -> object:
     expire_time = req.args.get('expire_time')
     print("expire_time", expire_time, datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1))
     if expire_time:
-        filters.append(BuyUserPermission.expire_time >= datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1))
+        filters.append(
+            BuyUserPermission.expire_time >= datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1))
     agent_id = req.args.get('agent_id')
     print("agent_id", agent_id)
     if agent_id:
@@ -193,7 +194,15 @@ def index():
 @login_required
 def combo():
     combos = BuyCombo.query.limit(100).all()
-    return render_template('combo.html', combos=combos)
+    results = BuyUserPermission.query.filter(
+        BuyUserPermission.expire_time >= datetime.now().replace(hour=0, minute=0, second=0) + timedelta(1)).group_by(
+        BuyUserPermission.agent_id).with_entities(BuyUserPermission.agent_id, func.count(BuyUserPermission.id)).all()
+    # print(results)
+    pay_count = {}
+    for item in results:
+        pay_count[item[0]] = item[1]
+    print(pay_count)
+    return render_template('combo.html', combos=combos, pay_count=pay_count)
 
 
 @app.route('/combo/add', methods=['POST'])
@@ -312,6 +321,13 @@ def search_permission():
 @app.route('/permission/add', methods=['POST'])
 @login_required
 def add_permission():
+    req_dict = request.values.to_dict()
+    # print(req_dict)
+    if req_dict.get("back_url", ""):
+        if [i for i in ["add", "update", "invalid"] if i in req_dict.get("back_url")]:
+            req_dict.pop("back_url")
+        # back_req = "/" + req_dict.get("back_url").split("/")[-1]
+    print(req_dict)
     user_id = request.form.get('user_id')
     agent_id = request.form.get('agent_id')
     try:
@@ -320,7 +336,7 @@ def add_permission():
                                   use_count=0, create_time=datetime.now(), update_time=datetime.now())
         db.session.add(user1)
         db.session.commit()
-        return render_template('user_permis.html', permission=user1, combos=get_combo())
+        return render_template('user_permis.html', permission=user1, combos=get_combo(), back_req=req_dict)
         # return redirect(url_for('permission'))
     except exc.IntegrityError as e:
         print("MySQLdb.InternalError", e)
@@ -340,15 +356,23 @@ def add_permission():
         return jsonify(result="添加权限失败，用户：%s, 应用ID: %s" % (user_id, agent_id))
 
 
-@app.route('/permission/invalid/<int:permission_id>')
+@app.route('/permission/invalid', methods=["POST"])
 @login_required
-def invalid_permission(permission_id):
+def invalid_permission():
+    req_dict = request.values.to_dict()
+    # print(req_dict)
+    # back_req = ""
+    if req_dict.get("back_url", ""):
+        if [i for i in ["add", "update", "invalid"] if i in req_dict.get("back_url")]:
+            req_dict.pop("back_url")
+    #     # back_req = "/" + req_dict.get("back_url").split("/")[-1]
+    print(req_dict)
     try:
-        permission = BuyUserPermission.query.filter_by(id=permission_id).update(
+        permission = BuyUserPermission.query.filter_by(id=req_dict.get("permission_id")).update(
             {"margin": 0, "update_time": datetime.now(), "expire_time": datetime.now() - timedelta(1)})
         db.session.commit()
-        _perm = BuyUserPermission.query.filter_by(id=permission_id).first()
-        return render_template('user_permis.html', permission=_perm, combos=get_combo())
+        _perm = BuyUserPermission.query.filter_by(id=req_dict.get("permission_id")).first()
+        return render_template('user_permis.html', permission=_perm, combos=get_combo(), back_req=req_dict)
         # return redirect(url_for('permission'))
     except Exception as e:
         print("invalid_permission", e)
@@ -359,7 +383,14 @@ def invalid_permission(permission_id):
 @app.route('/permission/update', methods=['POST'])
 @login_required
 def update_permission():
+    req_dict = request.values.to_dict()
+    # back_req = ""
+    if req_dict.get("back_url", ""):
+        if [i for i in ["add", "update", "invalid"] if i in req_dict.get("back_url")]:
+            req_dict.pop("back_url")
+        # back_req = "/" + req_dict.get("back_url").split("/")[-1]
     # up_user = {}
+    print(req_dict)
     perm_id = request.args.get('id')
     margin = request.form.get('margin')
     # if margin:
@@ -390,7 +421,7 @@ def update_permission():
         db.session.commit()
         print(user_perms.update_time)
         _perm = BuyUserPermission.query.filter_by(id=perm_id).first()
-        return render_template('user_permis.html', permission=_perm, combos=get_combo())
+        return render_template('user_permis.html', permission=_perm, combos=get_combo(), back_req=req_dict)
         # return redirect(url_for('permission'))
     except Exception as e:
         print("update_permission", e)

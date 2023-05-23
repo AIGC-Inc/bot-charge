@@ -3,36 +3,40 @@
 {% block index %}{% endblock %}
 {% block content %}
     {% block add_permission %}
-        <form method="post" action="{{ url_for('add_permission') }}">
+        {% if "add" in request.url %}
+            <form method="POST" action="{{ url_for('add_permission') }}">
+        {% else %}
+            <form method="POST" action="{{ url_for('add_permission', back_url=request.url) }}">
+        {% endif %}
+    <input type="text" name="user_id" placeholder="用户ID">
+    <select name="agent_id">
+        <option value=""></option>
+        {% for combo in combos %}
+            <option value="{{ combo.agent_id }}">{{ combo.combo_name }}</option>
+        {% endfor %}
+    </select>
+    <input type="number" name="margin" placeholder="当天可使用次数" min="0" step="1">
+    <input type="datetime-local" name="expire_time" placeholder="套餐过期时间">
+    <button type="submit">添加用户</button>
+    </form>
+    {% endblock %}
+
+    <div style="display: flex; justify-content: space-between;margin-top: 15px">
+        <form method="GET" action="{{ url_for('search_permission') }}">
             <input type="text" name="user_id" placeholder="用户ID">
+            <button type="submit">搜索</button>
+        </form>
+        <form method="GET" action="{{ url_for('search_permission') }}">
             <select name="agent_id">
                 <option value=""></option>
                 {% for combo in combos %}
                     <option value="{{ combo.agent_id }}">{{ combo.combo_name }}</option>
                 {% endfor %}
             </select>
-            <input type="number" name="margin" placeholder="当天可使用次数" min="0" step="1">
-            <input type="datetime-local" name="expire_time" placeholder="套餐过期时间">
-            <button type="submit">添加用户</button>
+            {#                <input type="text" name="agent_id" placeholder="应用ID">#}
+            <label><input type="checkbox" name="expire_time" value="True" checked>付费用户</label>
+            <button type="submit">检索</button>
         </form>
-    {% endblock %}
-
-    <div style="display: flex; justify-content: space-between;margin-top: 15px">
-            <form method="get" action="{{ url_for('search_permission') }}">
-                <input type="text" name="user_id" placeholder="用户ID">
-                <button type="submit">搜索</button>
-            </form>
-            <form method="get" action="{{ url_for('search_permission') }}">
-                <select name="agent_id">
-                    <option value=""></option>
-                    {% for combo in combos %}
-                        <option value="{{ combo.agent_id }}">{{ combo.combo_name }}</option>
-                    {% endfor %}
-                </select>
-{#                <input type="text" name="agent_id" placeholder="应用ID">#}
-                <label><input type="checkbox" name="expire_time" value="True" checked>付费用户</label>
-                <button type="submit">检索</button>
-            </form>
         {% block paginat %}
             {% include 'perm_paginat.html' %}
         {% endblock %}
@@ -56,7 +60,8 @@
                     <td>{{ permission.id }}</td>
                     <td>{{ permission.user_id }}</td>
                     <td>{{ permission.agent_id }}</td>
-                    <form method="post" action="{{ url_for('update_permission', id=permission.id) }}">
+                    <form method="POST"
+                          action="{{ url_for('update_permission', id=permission.id, back_url=request.url) }}">
                         <td><input type="number" name="margin" value="{{ permission.margin }}" min="0" step="1"></td>
                         <td><input type="datetime-local" name="expire_time" placeholder="yyyy-MM-dd HH:mm:ss"
                                    value="{{ permission.expire_time }}"></td>
@@ -67,7 +72,8 @@
                         </td>
                     </form>
                     <td>
-                        <form method="get" action="{{ url_for('invalid_permission', permission_id=permission.id) }}">
+                        <form method="POST"
+                              action="{{ url_for('invalid_permission', permission_id=permission.id, back_url=request.url) }}">
                             <button type="submit">失效</button>
                         </form>
                     </td>
