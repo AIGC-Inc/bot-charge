@@ -112,12 +112,14 @@ def check_User_Permissions():
         if update_time.date() < datetime.now().date():
             combo = BuyCombo.query.filter_by(agent_id=agent_id).first()
             if user_perms.expire_time > datetime.now():
-                user_perms.margin = combo.upper_limit
+                if user_perms.margin < combo.upper_limit:
+                    user_perms.margin = combo.upper_limit
                 user_perms.update_time = datetime.now()
                 db.session.commit()
                 return jsonify(result="1")
             else:
-                user_perms.margin = combo.free_quota
+                if user_perms.margin < combo.free_quota:
+                    user_perms.margin = combo.free_quota
                 user_perms.update_time = datetime.now()
                 db.session.commit()
                 if combo.free_quota > 0:
