@@ -157,7 +157,8 @@ def user_Charge():
         user_char = BuyUserPermission.query.filter(BuyUserPermission.user_id == info_dict.get("user_id"),
                                                    BuyUserPermission.agent_id == info_dict.get("agent_id"),
                                                    BuyUserPermission.margin > 0).update(
-            {"margin": BuyUserPermission.margin - 1, "update_time": datetime.now()})
+            {"margin": BuyUserPermission.margin - 1, "use_count": BuyUserPermission.use_count + 1,
+             "update_time": datetime.now()})
         db.session.commit()
         print(type(user_char), user_char)
         if user_char == 1:

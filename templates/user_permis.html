@@ -16,6 +16,7 @@
             <th>应用ID</th>
             <th>上次使用时间</th>
             <th>套餐过期时间</th>
+            <th>累积次数</th>
             <th>当天/昨天余量</th>
             <th>增加期限</th>
             <th>操作</th>
@@ -28,6 +29,7 @@
             <td>{{ permission.agent_id }}</td>
             <td>{{ permission.update_time }}</td>
             <td>{{ permission.expire_time }}</td>
+            <td>{{ permission.use_count }}</td>
             <form method="POST" action="{{ url_for('update_permission', id=permission.id
                 ) }}">
                 <td><input type="number" name="margin" value="{{ permission.margin }}" min="0" step="1"></td>
