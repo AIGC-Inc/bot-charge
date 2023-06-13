@@ -9,6 +9,7 @@
     <table>
         <thead>
         <tr>
+            <th>序号</th>
             <th>权限ID</th>
             <th>用户ID</th>
             <th>应用ID</th>
@@ -23,6 +24,7 @@
         <tbody>
         {% for permission in permissions.items %}
             <tr>
+                <td>{{ (permissions.page - 1) * permissions.per_page + loop.index }}</td>
                 <td>{{ permission.id }}</td>
                 <td>{{ permission.user_id }}</td>
                 <td>{{ permission.agent_id }}</td>
